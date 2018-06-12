@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+```{r Sleep x State means}
+brfss2013 %>%
+               filter(!is.na(sleptim1)) %>%
+               group_by(X_state) %>%
+               summarise(MeanSleep = mean(sleptim1), count = n())
+
+```
+
+```{r State count}
+ brfss2013 %>%
+           group_by(X_state) %>%
+           summarise(N = n())
+```
+
+
+```{r Sugar Graphs}
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar()
+
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar() + xlim(100, 115)
+
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar() + xlim(200, 215)
+
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar() + xlim(300, 400)
+
+```
+
+```{r Generate Subset of brfss2013}
+sugarbrfss <- brfss2013 %>%
+    select(X_state, ssbsugar, menthlth)
+```
+
+```{r}
+sugarbrfss <- sugarbrfss %>%
+  mutate(
+    sugarin30days = case_when(
+          ssbsugar - ssbsugar%%100 == 100 ~ as.double((ssbsugar%%100) * 30),
+          ssbsugar - ssbsugar%%100 == 200 ~ as.double(((ssbsugar%%100)/7) * 30),
+          ssbsugar - ssbsugar%%100 == 300 ~ as.double(ssbsugar%%100),
+          TRUE ~ 0
+          )
+  )
+```
+
+```{r}
+sugarbrfss %>%
+  filter(sugarin30days > 0) %>%
+  summarise(
+    MeanSug = mean(sugarin30days), meadSug = median(sugarin30days)
+  )
+```
+
+```{r}
+ggplot(data = sugarbrfss, mapping = aes(x = sugarin30days)) + geom_bar() + xlim(0.1, 115)
+```
+

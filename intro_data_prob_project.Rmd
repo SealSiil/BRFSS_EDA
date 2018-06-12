@@ -1,0 +1,128 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+### Load data
+
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+
+
+* * *
+
+## Part 1: Data
+
+Any findings from The Behavioral Risk Factor Surveillance System 2013 data set can be generalized to the population of non-institutionalized adults ( 18 years old and older), who live in the USA, District of Columbia, Guam, and Puerto Rico.  This is because a random sample of phone interviews was conducted in these regions.  There is a potential for non-response bias in this sampling scheme, because there is a chance for a non-random fraction of sampled households to not participate in the study.
+
+The results of this exploratory data analysis are not causal for the above stated population, because a observational study was preformed, not a experiment.  
+
+
+* * *
+
+## Part 2: Research questions
+
+**Research quesion 1:**
+
+Is there a relationship between what state a responder lives in and the average number of sugary drinks they have consumed in the past 30 days?
+
+This question would be of interesting for soda companies; they could use the data to help drive marketing campaigns.
+  
+**Research quesion 2:**
+
+Is there a relationship between the amount of time sleeping, number of poor mental health days, and gender of the respondent?
+
+I was always told that good nights of sleep improved mood, and I would be interested in what story the data provides.
+  
+**Research quesion 3:**
+
+Is there a difference between men and women's sugary drink consumption in the state of Illinois?  
+
+For marketing reasons knowing the difference, if there is one, between habits of men and women is important. Since gender is a very natural divider.
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+
+**Research quesion 1:**
+
+The reporting of responses on sugary drinks drank in the past 30 days creates a very interesting distribution, as seen in the next four graphs.
+
+```{r Sugar Graphs, warning=FALSE}
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar()
+
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar() + xlim(100, 115)
+
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar() + xlim(200, 215)
+
+ggplot(data = brfss2013, mapping = aes(x = ssbsugar)) + geom_bar() + xlim(300, 400)
+
+```
+
+This format can inform us on the pyscology of peoples responces, but may cause confusion on raw number of sugary drinks had.  So I have condenced them into a single scale.
+
+```{r}
+sugarbrfss <- brfss2013 %>%
+  filter(!is.na(ssbsugar)) %>% 
+  select(X_state, ssbsugar)
+
+sugarbrfss <- sugarbrfss %>%
+  mutate(
+    sugarin30days = case_when(
+          ssbsugar - ssbsugar%%100 == 100 ~ as.double((ssbsugar%%100) * 30),
+          ssbsugar - ssbsugar%%100 == 200 ~ as.double(((ssbsugar%%100)/7) * 30),
+          ssbsugar - ssbsugar%%100 == 300 ~ as.double(ssbsugar%%100),
+          TRUE ~ 0
+                              )
+        )
+
+```
+
+```{r}
+sugarbrfss %>%
+  summarise(MeanSug = mean(sugarin30days), meadSug = median(sugarin30days))
+
+ggplot(data = sugarbrfss, mapping = aes(x = sugarin30days)) + geom_bar() + xlim(0.1, 115)
+```
+
+
+```{r}
+sugarbrfss %>%
+  group_by(X_state) %>%
+  mutate()
+  ggplot(aes(x = X_state, y = AveSugar))
+```
+
+
+
+**Research quesion 2:**
+
+```{r}
+
+```
+
+
+
+**Research quesion 3:**
+
+```{r}
+
+```
+
