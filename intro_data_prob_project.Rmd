@@ -52,7 +52,7 @@ I was always told that good nights of sleep improved mood, and I would be intere
   
 **Research quesion 3:**
 
-Is there a difference between men and women's sugary drink consumption in the state of Illinois?  
+Is there a difference between men and women's sugary drink consumption in the state of Kentucky?  
 
 For marketing reasons knowing the difference, if there is one, between habits of men and women is important. Since gender is a very natural divider.
 
@@ -81,7 +81,7 @@ This format can inform us on the pyscology of peoples responces, but may cause c
 ```{r}
 sugarbrfss <- brfss2013 %>%
   filter(!is.na(ssbsugar)) %>% 
-  select(X_state, ssbsugar)
+  select(X_state, ssbsugar, sex)
 
 sugarbrfss <- sugarbrfss %>%
   mutate(
@@ -95,6 +95,8 @@ sugarbrfss <- sugarbrfss %>%
 
 ```
 
+There is a massive outlier in the data, of 1200 drinks in 30 days, which is why the following graph is bounded.
+
 ```{r}
 sugarbrfss %>%
   summarise(MeanSug = mean(sugarin30days), meadSug = median(sugarin30days))
@@ -102,27 +104,61 @@ sugarbrfss %>%
 ggplot(data = sugarbrfss, mapping = aes(x = sugarin30days)) + geom_bar() + xlim(0.1, 115)
 ```
 
+```{r}
+sugarbrfss %>%
+  select(X_state, ssbsugar) %>%
+  summary()
+```
+
+
 
 ```{r}
 sugarbrfss %>%
   group_by(X_state) %>%
-  mutate()
-  ggplot(aes(x = X_state, y = AveSugar))
+  summarise(AveSugarPerPerson = mean(sugarin30days)) %>%
+  ggplot(aes(x = reorder(X_state, -AveSugarPerPerson), y = AveSugarPerPerson)) + geom_bar(stat="identity") + coord_flip()
 ```
+
+It is very surprizing how few states there is complete data for. There does not seem to be any states which are outliers for the number of drinks consumed in 30 days.  
 
 
 
 **Research quesion 2:**
 
+To clean the data for analysis, NA values and values which  must be data entery mistakes are removed.  There should not be any values larger than 24 hours for sleep time, because there are only 24 hours in a day, and no more than 30 bad mental health days in 30 days.
+
 ```{r}
+SleepTime <- brfss2013 %>%
+               filter(!is.na(sleptim1) & !is.na(menthlth) & !is.na(sex)& sleptim1 <= 24 & menthlth <= 30) %>%
+               select(sleptim1, menthlth, sex)
+summary(SleepTime)
+
+SleepTime %>%
+  group_by(sex) %>%
+  summarize(MeanSleep=mean(sleptim1), MeanMHealth = mean(menthlth) )
+
 
 ```
+```{r}
+SleepTime %>%
+  ggplot(aes(x = sleptim1, y = menthlth, color = sex)) + geom_point(position = "jitter")
+```
+
+The above graph shows how clustered people's responses were, and that there seems to be little effect of geneder on either of these variables.  This can be shown by the random spread between men and women in the graph, along with the extremely close means shown in the above table.
 
 
 
 **Research quesion 3:**
 
 ```{r}
+sugarbrfss %>%
+  filter(X_state == "Kentucky") %>%
+  group_by(sex) %>%
+  summarize(MeanSugar = mean(sugarin30days), MedianSugar = median(sugarin30days), Count = n())
 
+sugarbrfss %>%
+  filter(X_state == "Kentucky") %>%
+  ggplot(aes(x = sugarin30days, fill = sex))  + geom_histogram(bins = 50)
 ```
 
+My first thought was that the male outlier value near 400 drinks in 30 days, was what drived the difference between men and women mean values.  With the meadian values relatively close, I feel that my first thought maybe correct.  Also there are about twice as many female responces which could allow for a tighter distrubution, seen as a smaller difference between mean and median.
